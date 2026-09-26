@@ -1,0 +1,36 @@
+# Data
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
+*.csv
+*.parquet
+*.xlsx
+*.db
+*.sqlite
+
+# Secrets
+.env
+*.key
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
