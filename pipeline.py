@@ -6,7 +6,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-
+from data_loaders import load_data
 logger = logging.getLogger(__name__)
 
 def setup_logging(verbose=False):
@@ -37,7 +37,6 @@ def validate_input(filepath):
         logger.error(f"Input file not found: {filepath}")
         return False
 
-
 def main():
     """Main pipeline function."""
     args = parse_arguments()
@@ -47,6 +46,11 @@ def main():
     )
 
     if not validate_input(args.input):
+        sys.exit(1)
+
+    try:
+        data = load_data(args.input)
+    except ValueError:
         sys.exit(1)
 
 
