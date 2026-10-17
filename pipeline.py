@@ -1,23 +1,23 @@
 """
-Data Processing Pipeline - CLI Template
+Data Processing Pipeline - CLI
 DS 3500 - MP1
 """
 import argparse
 import logging
 import sys
-from pathlib import Path
-from data_loaders import load_data
-logger = logging.getLogger(__name__)
-from data_processor import process_data, create_cleaning_report
 
-def setup_logging(verbose=False):
-    """Configure logging for the pipeline."""
-    level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
-        datefmt="%H:%M:%S",
-    )
+from src import (
+    create_cleaning_report,
+    load_data,
+    process_data,
+    save_data,
+    setup_logging,
+    validate_dataframe,
+    validate_input,
+)
+
+logger = logging.getLogger(__name__)
+
 
 def parse_arguments():
     """Parse command-line arguments."""
@@ -28,14 +28,6 @@ def parse_arguments():
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     return parser.parse_args()
 
-def validate_input(filepath):
-    """Check whether the input path exists and is a file."""
-    if Path(filepath).is_file():
-        logger.info(f"Input file validated: {filepath}")
-        return True
-    else:
-        logger.error(f"Input file not found: {filepath}")
-        return False
 
 def main():
     """Main pipeline function."""
@@ -51,12 +43,22 @@ def main():
     if not validate_input(args.config):
         sys.exit(1)
 
-    # Load both the data and the configuration
+    # Load the data and configuration
     try:
         data = load_data(args.input)
         config = load_data(args.config)
     except ValueError:
         sys.exit(1)
+
+    # Validate the DataFrame
+    required_columns = config["validation"]["required_columns"]
+    numeric_columns = config["validation"]["numeric_columns"]
+    rows_before_validation = len(data)
+    try:
+        data = validate_dataframe(data, required_columns, numeric_columns)
+    except ValueError:
+        sys.exit(1)
+    logger.info(f"Validation complete: {rows_before_validation} -> {len(data)} rows")
 
     # Process the data
     df_before = data.copy()
@@ -64,14 +66,14 @@ def main():
         data = process_data(data, config)
     except ValueError:
         sys.exit(1)
-
-    # Report and save
     report = create_cleaning_report(df_before, data)
-    logger.info(f"Processing complete: {report['rows_before']} → {report['rows_after']} rows")
+    logger.info(f"Processing complete: {report['rows_before']} -> {report['rows_after']} rows")
 
-    data.to_csv(args.output, index=False)
+    # Save the cleaned data
+    save_data(data, args.output)
     logger.info(f"Saved cleaned data to {args.output}")
 
+    # Print the cleaning report
     print(report)
 
 
